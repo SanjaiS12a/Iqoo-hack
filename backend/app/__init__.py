@@ -1,0 +1,2 @@
+"""ClassMind backend package."""
+
