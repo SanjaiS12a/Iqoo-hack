@@ -3,7 +3,7 @@ from typing import Protocol
 
 from openai import OpenAI
 
-from .models import Question
+from .academic_models import Question
 from .schemas import Diagnosis, TutorReply
 
 
@@ -118,9 +118,48 @@ class OpenAIProvider:
         return response.output_text
 
 
-def build_ai_provider(provider: str, api_key: str | None, model: str) -> AIProvider:
+class CompatibleAssessmentProvider:
+    def __init__(self, api_key: str, model: str, base_url: str):
+        self.client = OpenAI(api_key=api_key, base_url=base_url, timeout=45.0, max_retries=2)
+        self.model = model
+
+    def _json(self, system: str, prompt: str) -> dict:
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+        )
+        content = response.choices[0].message.content
+        if not content:
+            raise RuntimeError("Configured AI provider returned no content")
+        return json.loads(content)
+
+    def diagnose(self, question: Question, answer: str) -> Diagnosis:
+        payload = self._json(
+            "Return JSON: is_correct, misconception_tag or null, misconception_label or null, micro_explanation, confidence 0..1. Diagnose student reasoning supportively.",
+            f"Question: {question.text}\nExpected answer: {question.correct_answer}\nStudent working: {answer}",
+        )
+        return Diagnosis.model_validate(payload)
+
+    def tutor(self, doubt: str) -> TutorReply:
+        payload = self._json("Return JSON with concept_tag and response. Give a concise school-level explanation and one example.", doubt)
+        return TutorReply.model_validate(payload)
+
+    def reteach(self, label: str, affected_students: int) -> str:
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "system", "content": "Write a two-minute spoken re-teach script with an example and check for understanding."}, {"role": "user", "content": f"Misconception: {label}. Affected learners: {affected_students}."}],
+        )
+        return response.choices[0].message.content or "No script was returned."
+
+
+def build_ai_provider(provider: str, api_key: str | None, model: str, base_url: str | None = None) -> AIProvider:
     if provider == "openai":
         if not api_key:
             raise RuntimeError("AI_PROVIDER=openai requires OPENAI_API_KEY")
         return OpenAIProvider(api_key, model)
+    if provider in {"gemini", "local"}:
+        if not api_key or not base_url:
+            raise RuntimeError(f"AI_PROVIDER={provider} requires a key and compatible base URL")
+        return CompatibleAssessmentProvider(api_key, model, base_url)
     return DemoAIProvider()

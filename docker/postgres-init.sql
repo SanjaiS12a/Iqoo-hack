@@ -1,0 +1,12 @@
+CREATE DATABASE classmind_grade_01;
+CREATE DATABASE classmind_grade_02;
+CREATE DATABASE classmind_grade_03;
+CREATE DATABASE classmind_grade_04;
+CREATE DATABASE classmind_grade_05;
+CREATE DATABASE classmind_grade_06;
+CREATE DATABASE classmind_grade_07;
+CREATE DATABASE classmind_grade_08;
+CREATE DATABASE classmind_grade_09;
+CREATE DATABASE classmind_grade_10;
+CREATE DATABASE classmind_grade_11;
+CREATE DATABASE classmind_grade_12;

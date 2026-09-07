@@ -1,4 +1,4 @@
-import { ArrowRight, BrainCircuit, ChartNoAxesCombined, Check, Sparkles } from "lucide-react";
+import { ArrowRight, BrainCircuit, Building2, ChartNoAxesCombined, Check, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import { api, session } from "../api";
@@ -13,7 +13,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: User) => void }) {
     setLoading(role);
     setError("");
     try {
-      const email = role === "student" ? "aarav@classmind.demo" : "meera@classmind.demo";
+      const email = role === "student" ? "aarav@classmind.demo" : role === "teacher" ? "meera@classmind.demo" : "admin@classmind.demo";
       const result = await api.login(email, "demo1234");
       session.save(result.access_token);
       onLogin(result.user);
@@ -59,6 +59,11 @@ export function LoginPage({ onLogin }: { onLogin: (user: User) => void }) {
               <div className="role-icon"><ChartNoAxesCombined /></div>
               <div><strong>Enter as teacher</strong><span>See live gaps and generate a re-teach</span></div>
               {loading === "teacher" ? <Spinner /> : <ArrowRight />}
+            </button>
+            <button className="role-option admin-option" onClick={() => demoLogin("admin")} disabled={loading !== null}>
+              <div className="role-icon"><Building2 /></div>
+              <div><strong>Enter as administrator</strong><span>Manage Grades 1–12, sections and assignments</span></div>
+              {loading === "admin" ? <Spinner /> : <ArrowRight />}
             </button>
           </div>
           {error && <div className="error-notice">{error}. Make sure the backend is running on port 8000.</div>}

@@ -7,11 +7,11 @@ import { api } from "../api";
 import { Badge, Card, ErrorNotice, Spinner } from "../components/ui";
 import type { Dashboard } from "../types";
 
-function DashboardView() {
+function DashboardView({ classId }: { classId: number }) {
   const [selected, setSelected] = useState<Dashboard["misconceptions"][number] | null>(null);
   const [script, setScript] = useState("");
-  const dashboard = useQuery({ queryKey: ["dashboard"], queryFn: api.dashboard, refetchInterval: 5000 });
-  const reteach = useMutation({ mutationFn: (item: Dashboard["misconceptions"][number]) => api.reteach(item), onSuccess: value => setScript(value.script) });
+  const dashboard = useQuery({ queryKey: ["dashboard", classId], queryFn: () => api.dashboard(classId), refetchInterval: 5000 });
+  const reteach = useMutation({ mutationFn: (item: Dashboard["misconceptions"][number]) => api.reteach(classId, item), onSuccess: value => setScript(value.script) });
   if (dashboard.isLoading) return <div className="center-loader"><Spinner /></div>;
   if (dashboard.error || !dashboard.data) return <ErrorNotice message={(dashboard.error as Error)?.message ?? "Could not load the class pulse"} />;
   const data = dashboard.data;
@@ -23,7 +23,7 @@ function DashboardView() {
   ] as const;
   const handleReteach = (item: Dashboard["misconceptions"][number]) => { setSelected(item); setScript(""); reteach.mutate(item); };
   return <>
-    <div className="page-heading"><div><div className="live-label"><i /> Live class pulse · refreshes every 5 seconds</div><h1>Where does 9A need you?</h1><p>Class-level signals from answers and doubts, ranked for action.</p></div><button className="secondary-button" onClick={() => dashboard.refetch()}><RefreshCw size={17} /> Refresh now</button></div>
+    <div className="page-heading"><div><div className="live-label"><i /> Live class pulse · refreshes every 5 seconds</div><h1>Where does {data.classroom.grade}{data.classroom.section} need you?</h1><p>Class-level signals from answers and doubts, ranked for action.</p></div><button className="secondary-button" onClick={() => dashboard.refetch()}><RefreshCw size={17} /> Refresh now</button></div>
     {data.demo_data && <div className="demo-banner"><Sparkles size={18} /><div><strong>Presentation-ready demo data</strong><span>Class activity is synthetic and clearly separated from future live classroom records.</span></div></div>}
     <div className="metric-grid">{metrics.map(([label, value, Icon, tone]) => <Card key={label} className="metric-card"><div className={`metric-icon ${tone}`}><Icon /></div><div><span>{label}</span><strong>{value}</strong></div></Card>)}</div>
     <div className="two-column wide-left">
@@ -35,12 +35,11 @@ function DashboardView() {
   </>;
 }
 
-function StudentsView() {
-  const { data = [], isLoading, error } = useQuery({ queryKey: ["students"], queryFn: api.students });
-  return <><div className="page-heading"><div><span className="eyebrow">40 learner profiles</span><h1>Learner progress</h1><p>Scan participation and current learning signals across the class.</p></div></div>{isLoading ? <div className="center-loader"><Spinner /></div> : error ? <ErrorNotice message={(error as Error).message} /> : <Card><div className="student-table"><div className="table-head"><span>Learner</span><span>Attempts</span><span>Accuracy</span><span>Active gaps</span></div>{data.map((student, index) => <div className="table-row" key={student.id}><div><i style={{ background: ["#0f766e", "#d97706", "#64748b"][index % 3] }}>{student.name.split(" ").map(x => x[0]).slice(0, 2).join("")}</i><strong>{student.name}</strong></div><span>{student.attempts}</span><span><b className={student.accuracy >= 70 ? "positive" : student.accuracy ? "caution" : "neutral"}>{student.accuracy}%</b></span><span><Badge tone={student.active_gaps > 1 ? "red" : student.active_gaps ? "amber" : "gray"}>{student.active_gaps}</Badge></span></div>)}</div></Card>}</>;
+function StudentsView({ classId }: { classId: number }) {
+  const { data = [], isLoading, error } = useQuery({ queryKey: ["students", classId], queryFn: () => api.students(classId) });
+  return <><div className="page-heading"><div><span className="eyebrow">{isLoading ? "Loading learner profiles" : `${data.length} learner profiles`}</span><h1>Learner progress</h1><p>Scan participation and current learning signals across the class.</p></div></div>{isLoading ? <div className="center-loader"><Spinner /></div> : error ? <ErrorNotice message={(error as Error).message} /> : <Card><div className="student-table"><div className="table-head"><span>Learner</span><span>Attempts</span><span>Accuracy</span><span>Active gaps</span></div>{data.map((student, index) => <div className="table-row" key={student.id}><div><i style={{ background: ["#0f766e", "#d97706", "#64748b"][index % 3] }}>{student.name.split(" ").map(x => x[0]).slice(0, 2).join("")}</i><strong>{student.name}</strong></div><span>{student.attempts}</span><span><b className={student.accuracy >= 70 ? "positive" : student.accuracy ? "caution" : "neutral"}>{student.accuracy}%</b></span><span><Badge tone={student.active_gaps > 1 ? "red" : student.active_gaps ? "amber" : "gray"}>{student.active_gaps}</Badge></span></div>)}</div></Card>}</>;
 }
 
-export function TeacherApp({ view }: { view: string }) {
-  return view === "students" ? <StudentsView /> : <DashboardView />;
+export function TeacherApp({ view, classId }: { view: string; classId: number }) {
+  return view === "students" ? <StudentsView classId={classId} /> : <DashboardView classId={classId} />;
 }
-

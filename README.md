@@ -1,6 +1,6 @@
 # ClassMind — AI Teaching Co-Pilot
 
-ClassMind is a complete hackathon demo of a closed classroom learning loop: a learner shows their working, the system identifies a specific misconception, the teacher sees class-level patterns, and the learner receives a prioritized revision plan.
+ClassMind is a complete school demo covering Grade 1 through Grade 12. A control database manages identities and assignments, twelve physically separate grade databases store academic work, and uploaded class portions drive questions, tutoring, analytics, and study plans.
 
 ## Working demo
 
@@ -18,8 +18,9 @@ Demo accounts use password `demo1234`:
 
 - Student: `aarav@classmind.demo`
 - Teacher: `meera@classmind.demo`
+- Administrator: `admin@classmind.demo`
 
-The login screen provides one-click access to both accounts. Seed activity represents a synthetic 40-learner classroom. Exam-frequency values are illustrative demo weights.
+The login screen provides one-click access to all three roles. Teachers have multiple assigned classes; sections contain 20–30 synthetic learners. Exam-frequency values are illustrative demo weights.
 
 ## Run services separately
 
@@ -40,7 +41,7 @@ npm install
 npm run dev
 ```
 
-SQLite is created and seeded automatically at `backend/classmind.db`.
+The demo creates `backend/classmind_control.db` plus `backend/grade_databases/classmind_grade_01.db` through `classmind_grade_12.db`. Uploaded portion files are kept under `backend/uploads/` and are excluded from Git.
 
 ## Enable OpenAI
 
@@ -54,14 +55,32 @@ OPENAI_MODEL=gpt-5.4-mini
 
 The API key is read only by FastAPI. The browser never receives it. The OpenAI provider uses the Responses API and Pydantic Structured Outputs for answer diagnosis and tutoring. Demo mode remains the default until a key is configured.
 
+Gemini through its OpenAI-compatible endpoint:
+
+```env
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your_api_key
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+Local OpenAI-compatible model server:
+
+```env
+AI_PROVIDER=local
+LOCAL_AI_BASE_URL=http://localhost:11434/v1
+LOCAL_AI_MODEL=your_vision_capable_model
+```
+
+The selected provider powers portion extraction, answer diagnosis, tutoring, and re-teach generation. A local model must accept image input to extract photographed pages.
+
 ## Demo walkthrough
 
-1. Enter as **Student**, open **Practice**, choose “Solving linear equations,” and submit `2x = 10 - 4, so x = 7`.
-2. Review the precise transposition misconception and micro-explanation.
-3. Sign out, enter as **Teacher**, and see the updated misconception count in **Class pulse**.
-4. Click the wand beside the top misconception to generate a two-minute re-teach script.
-5. Return as the student, open **Ask ClassMind**, and ask “Why does a minus sign change when I move a term?”
-6. Open **My study plan**, generate priorities, and complete an item.
+1. Enter as **Administrator** and inspect the twelve physically separated grade databases and their classroom sections.
+2. Open **Assignments** to assign a teacher to several classes or move a student into exactly one class.
+3. Enter as **Teacher**, switch between Grade 9A and Grade 6B, and confirm every dashboard changes with the selected class.
+4. Open **Portions**, upload `demo-assets/grade-9-fractions-portion.pdf` (or your own PDF/PNG/JPEG), review the extracted draft, edit its topics, and publish it.
+5. Enter as **Student** to see only Grade 9A's published portion, generated practice, and portion-scoped study plan.
+6. Submit `2x = 10 - 4, so x = 7`, return as the teacher, and generate a focused re-teach from the class signal.
 
 ## Tests
 
@@ -80,12 +99,12 @@ npm run build
 docker compose up --build
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Docker uses PostgreSQL; local development uses SQLite.
+Open [http://localhost:3000](http://localhost:3000). Docker initializes one PostgreSQL control database plus twelve distinct grade databases; local development uses thirteen SQLite files.
 
 ## Project structure
 
 ```text
-backend/app/       FastAPI routes, AI providers, models, auth, seed data
+backend/app/       FastAPI routes, control/grade routing, AI providers, uploads
 backend/tests/     API and authorization integration tests
 frontend/src/      React pages, shared components, API client, design system
 docs/              Architecture and implementation plan

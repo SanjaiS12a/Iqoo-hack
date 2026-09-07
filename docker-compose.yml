@@ -2,11 +2,12 @@ services:
   database:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: classmind
+      POSTGRES_DB: classmind_control
       POSTGRES_USER: classmind
       POSTGRES_PASSWORD: classmind_demo
     volumes:
       - classmind_data:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/01-grades.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U classmind"]
       interval: 5s
@@ -17,11 +18,17 @@ services:
     build: ./backend
     ports: ["8000:8000"]
     environment:
-      DATABASE_URL: postgresql+psycopg://classmind:classmind_demo@database:5432/classmind
+      DATABASE_URL: postgresql+psycopg://classmind:classmind_demo@database:5432/classmind_control
+      GRADE_DATABASE_URL_TEMPLATE: postgresql+psycopg://classmind:classmind_demo@database:5432/classmind_grade_{grade_padded}
+      UPLOAD_DIR: /app/uploads
       JWT_SECRET: ${JWT_SECRET:-local-docker-secret-change-for-production}
       AI_PROVIDER: ${AI_PROVIDER:-demo}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.4-mini}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      LOCAL_AI_BASE_URL: ${LOCAL_AI_BASE_URL:-http://host.docker.internal:11434/v1}
+      LOCAL_AI_MODEL: ${LOCAL_AI_MODEL:-qwen2.5vl}
       CORS_ORIGINS: http://localhost:3000
     depends_on:
       database:
@@ -37,4 +44,3 @@ services:
 
 volumes:
   classmind_data:
-

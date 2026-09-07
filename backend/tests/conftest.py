@@ -14,6 +14,10 @@ from app.main import create_app  # noqa: E402
 def client(tmp_path, monkeypatch):
     database_path = tmp_path / "test.db"
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{database_path.as_posix()}")
-    app = create_app(database_url=f"sqlite:///{database_path.as_posix()}")
+    app = create_app(
+        database_url=f"sqlite:///{database_path.as_posix()}",
+        grade_database_dir=tmp_path / "grades",
+        upload_dir=tmp_path / "uploads",
+    )
     with TestClient(app) as test_client:
         yield test_client

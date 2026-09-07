@@ -6,6 +6,8 @@ __pycache__/
 .venv/
 node_modules/
 dist/
+uploads/
+grade_databases/
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts

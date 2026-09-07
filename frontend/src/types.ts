@@ -1,12 +1,14 @@
-export type Role = "student" | "teacher";
+export type Role = "student" | "teacher" | "admin";
 
 export interface User {
   id: number;
   name: string;
   email: string;
   role: Role;
-  class_id: number;
-  class_name: string;
+  class_id: number | null;
+  class_name: string | null;
+  grade: number | null;
+  section: string | null;
   avatar_color: string;
 }
 
@@ -60,11 +62,12 @@ export interface StudentOverview {
   questions_attempted: number;
   streak: number;
   active_gaps: number;
+  active_portion?: Portion | null;
   recent: Array<{ id: number; topic: string; is_correct: boolean; misconception_label: string | null; created_at: string }>;
 }
 
 export interface Dashboard {
-  classroom: { id: number; name: string; student_count: number };
+  classroom: Classroom;
   summary: { active_students: number; total_students: number; accuracy: number; questions_answered: number };
   misconceptions: Array<{ tag: string; label: string; affected_students: number; events: number; class_percentage: number }>;
   topics: Array<{ topic: string; accuracy: number; attempts: number }>;
@@ -72,3 +75,47 @@ export interface Dashboard {
   demo_data: boolean;
 }
 
+export interface Classroom {
+  id: number;
+  name: string;
+  subject: string;
+  grade: number;
+  section: string;
+  join_code: string;
+  student_count: number;
+}
+
+export interface PortionTopic {
+  id?: number;
+  title: string;
+  learning_outcome: string;
+  sequence: number;
+}
+
+export interface PortionQuestion {
+  id?: number;
+  text: string;
+  expected_answer: string;
+  difficulty: string;
+  topic: string;
+  exam_weight: number;
+}
+
+export interface Portion {
+  id: number;
+  class_id: number;
+  title: string;
+  subject: string;
+  original_filename: string;
+  status: "processing" | "draft" | "published" | "archived" | "failed";
+  provider: string;
+  created_at: string;
+  published_at: string | null;
+  topics: PortionTopic[];
+  questions: PortionQuestion[];
+}
+
+export interface GradeSummary {
+  grade: number;
+  classes: Classroom[];
+}

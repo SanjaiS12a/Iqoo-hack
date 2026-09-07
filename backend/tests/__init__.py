@@ -1,0 +1,1 @@
+"""ClassMind integration tests."""

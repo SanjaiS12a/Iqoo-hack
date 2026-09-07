@@ -3,6 +3,8 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import App from "./App";
+import { Layout } from "./components/Layout";
+import type { User } from "./types";
 
 describe("ClassMind application shell", () => {
   it("offers direct student and teacher demo entry points", () => {
@@ -16,5 +18,14 @@ describe("ClassMind application shell", () => {
     expect(screen.getByRole("heading", { name: /every learner understood/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /enter as student/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /enter as teacher/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /enter as administrator/i })).toBeInTheDocument();
+  });
+});
+
+describe("role-aware navigation", () => {
+  it("labels the administrator workspace correctly", () => {
+    const administrator: User = { id: 1, name: "School Administrator", email: "admin@classmind.demo", role: "admin", class_id: null, class_name: null, grade: null, section: null, avatar_color: "#555" };
+    render(<Layout user={administrator} view="school" onView={() => undefined} onLogout={() => undefined} aiMode="demo"><div>School</div></Layout>);
+    expect(screen.getByText("Administrator workspace")).toBeInTheDocument();
   });
 });
