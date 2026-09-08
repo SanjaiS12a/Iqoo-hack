@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_model: str = "gpt-5.4-mini"
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.6-flash"
     local_ai_base_url: str = "http://localhost:11434/v1"
     local_ai_model: str = "qwen2.5vl"
     cors_origins: str = "http://localhost:5173"

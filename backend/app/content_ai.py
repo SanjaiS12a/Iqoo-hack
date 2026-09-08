@@ -34,6 +34,29 @@ class ContentIntelligenceProvider(Protocol):
     def extract(self, filename: str, media_type: str, content: bytes) -> ExtractedPortion: ...
 
 
+class FallbackContentProvider:
+    def __init__(self, providers: list[ContentIntelligenceProvider]):
+        if not providers:
+            raise ValueError("At least one content provider is required")
+        self.providers = providers
+        self.last_provider: str | None = None
+
+    @property
+    def name(self) -> str:
+        return self.last_provider or "automatic"
+
+    def extract(self, filename: str, media_type: str, content: bytes) -> ExtractedPortion:
+        failures: list[str] = []
+        for provider in self.providers:
+            try:
+                result = provider.extract(filename, media_type, content)
+                self.last_provider = provider.name
+                return result
+            except Exception as error:
+                failures.append(f"{provider.name}: {error.__class__.__name__}")
+        raise RuntimeError(f"All content providers failed ({', '.join(failures)})")
+
+
 class DemoContentProvider:
     name = "demo"
 
@@ -92,12 +115,23 @@ class CompatibleContentProvider:
     def _pdf_text(media_type: str, content: bytes) -> str:
         if media_type != "application/pdf":
             return "Read the attached image."
-        pages = PdfReader(io.BytesIO(content)).pages
-        text = "\n".join((page.extract_text() or "") for page in pages)
+        try:
+            pages = PdfReader(io.BytesIO(content)).pages
+            text = "\n".join((page.extract_text() or "") for page in pages)
+        except Exception:
+            text = ""
         return text[:30000] or "This PDF appears scanned; extract visible syllabus content conservatively."
 
 
 def build_content_provider(settings) -> ContentIntelligenceProvider:
+    if settings.ai_provider == "auto":
+        providers: list[ContentIntelligenceProvider] = []
+        if settings.openai_api_key:
+            providers.append(CompatibleContentProvider("openai", settings.openai_api_key, settings.openai_model))
+        if settings.gemini_api_key:
+            providers.append(CompatibleContentProvider("gemini", settings.gemini_api_key, settings.gemini_model, "https://generativelanguage.googleapis.com/v1beta/openai/"))
+        providers.append(DemoContentProvider())
+        return FallbackContentProvider(providers)
     if settings.ai_provider == "openai" and settings.openai_api_key:
         return CompatibleContentProvider("openai", settings.openai_api_key, settings.openai_model)
     if settings.ai_provider == "gemini" and settings.gemini_api_key:
@@ -105,4 +139,3 @@ def build_content_provider(settings) -> ContentIntelligenceProvider:
     if settings.ai_provider == "local":
         return CompatibleContentProvider("local", "local-model", settings.local_ai_model, settings.local_ai_base_url)
     return DemoContentProvider()
-

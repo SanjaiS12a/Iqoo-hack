@@ -43,24 +43,28 @@ npm run dev
 
 The demo creates `backend/classmind_control.db` plus `backend/grade_databases/classmind_grade_01.db` through `classmind_grade_12.db`. Uploaded portion files are kept under `backend/uploads/` and are excluded from Git.
 
-## Enable OpenAI
+## Enable automatic AI fallback
 
 Copy `.env.example` to `backend/.env`, then set:
 
 ```env
-AI_PROVIDER=openai
+AI_PROVIDER=auto
 OPENAI_API_KEY=your_api_key
 OPENAI_MODEL=gpt-5.4-mini
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-3.6-flash
 ```
 
-The API key is read only by FastAPI. The browser never receives it. The OpenAI provider uses the Responses API and Pydantic Structured Outputs for answer diagnosis and tutoring. Demo mode remains the default until a key is configured.
+The keys are read only by FastAPI. The browser never receives them. Each AI operation tries OpenAI first, then Gemini, then the built-in deterministic demo provider so the classroom workflow remains available during remote API failures. The OpenAI provider uses the Responses API and Pydantic Structured Outputs for answer diagnosis and tutoring.
 
-Gemini through its OpenAI-compatible endpoint:
+To force only OpenAI, use `AI_PROVIDER=openai`.
+
+To force only Gemini through its OpenAI-compatible endpoint:
 
 ```env
 AI_PROVIDER=gemini
 GEMINI_API_KEY=your_api_key
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.6-flash
 ```
 
 Local OpenAI-compatible model server:

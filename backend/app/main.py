@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .academic_models import Doubt, Portion, PortionTopic, Question, ReteachScript, StudyPlan, StudyPlanItem, Submission
-from .ai import build_ai_provider
+from .ai import build_ai_provider, build_fallback_ai_provider
 from .auth import create_token, current_user_dependency, require_role, verify_password
 from .config import get_settings
 from .content_ai import build_content_provider
@@ -27,7 +27,9 @@ def create_app(database_url: str | None = None, grade_database_dir: str | Path |
     grade_registry = GradeDatabaseRegistry(grade_database_dir or settings.grade_database_dir, settings.grade_database_url_template if grade_database_dir is None else None)
     storage = LocalPortionStorage(upload_dir or settings.upload_dir)
     content_ai = build_content_provider(settings)
-    if settings.ai_provider == "gemini":
+    if settings.ai_provider == "auto":
+        answer_ai = build_fallback_ai_provider(settings)
+    elif settings.ai_provider == "gemini":
         answer_ai = build_ai_provider("gemini", settings.gemini_api_key, settings.gemini_model, "https://generativelanguage.googleapis.com/v1beta/openai/")
     elif settings.ai_provider == "local":
         answer_ai = build_ai_provider("local", "local-model", settings.local_ai_model, settings.local_ai_base_url)

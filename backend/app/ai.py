@@ -13,6 +13,34 @@ class AIProvider(Protocol):
     def reteach(self, label: str, affected_students: int) -> str: ...
 
 
+class FallbackAIProvider:
+    def __init__(self, providers: list[tuple[str, AIProvider]]):
+        if not providers:
+            raise ValueError("At least one AI provider is required")
+        self.providers = providers
+        self.last_provider: str | None = None
+
+    def _call(self, method: str, *args):
+        failures: list[str] = []
+        for name, provider in self.providers:
+            try:
+                result = getattr(provider, method)(*args)
+                self.last_provider = name
+                return result
+            except Exception as error:
+                failures.append(f"{name}: {error.__class__.__name__}")
+        raise RuntimeError(f"All AI providers failed ({', '.join(failures)})")
+
+    def diagnose(self, question: Question, answer: str) -> Diagnosis:
+        return self._call("diagnose", question, answer)
+
+    def tutor(self, doubt: str) -> TutorReply:
+        return self._call("tutor", doubt)
+
+    def reteach(self, label: str, affected_students: int) -> str:
+        return self._call("reteach", label, affected_students)
+
+
 class DemoAIProvider:
     def diagnose(self, question: Question, answer: str) -> Diagnosis:
         normalized = "".join(answer.lower().split())
@@ -163,3 +191,13 @@ def build_ai_provider(provider: str, api_key: str | None, model: str, base_url: 
             raise RuntimeError(f"AI_PROVIDER={provider} requires a key and compatible base URL")
         return CompatibleAssessmentProvider(api_key, model, base_url)
     return DemoAIProvider()
+
+
+def build_fallback_ai_provider(settings) -> FallbackAIProvider:
+    providers: list[tuple[str, AIProvider]] = []
+    if settings.openai_api_key:
+        providers.append(("openai", OpenAIProvider(settings.openai_api_key, settings.openai_model)))
+    if settings.gemini_api_key:
+        providers.append(("gemini", CompatibleAssessmentProvider(settings.gemini_api_key, settings.gemini_model, "https://generativelanguage.googleapis.com/v1beta/openai/")))
+    providers.append(("demo", DemoAIProvider()))
+    return FallbackAIProvider(providers)

@@ -69,7 +69,7 @@ export function Layout({ user, view, onView, onLogout, children, aiMode, classes
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="ai-status"><Sparkles size={16} /><div><strong>{aiMode === "demo" ? "Demo AI active" : "OpenAI connected"}</strong><span>{aiMode === "demo" ? "Safe sample responses" : "Live analysis enabled"}</span></div></div>
+          <div className="ai-status"><Sparkles size={16} /><div><strong>{aiMode === "demo" ? "Demo AI active" : aiMode === "auto" ? "AI fallback active" : `${aiMode === "gemini" ? "Gemini" : aiMode === "local" ? "Local AI" : "OpenAI"} connected`}</strong><span>{aiMode === "demo" ? "Safe sample responses" : aiMode === "auto" ? "OpenAI → Gemini → demo" : "Live analysis enabled"}</span></div></div>
           <button className="logout" onClick={onLogout}><LogOut size={18} /> Sign out</button>
         </div>
       </aside>

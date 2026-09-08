@@ -22,11 +22,11 @@ services:
       GRADE_DATABASE_URL_TEMPLATE: postgresql+psycopg://classmind:classmind_demo@database:5432/classmind_grade_{grade_padded}
       UPLOAD_DIR: /app/uploads
       JWT_SECRET: ${JWT_SECRET:-local-docker-secret-change-for-production}
-      AI_PROVIDER: ${AI_PROVIDER:-demo}
+      AI_PROVIDER: ${AI_PROVIDER:-auto}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.4-mini}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.6-flash}
       LOCAL_AI_BASE_URL: ${LOCAL_AI_BASE_URL:-http://host.docker.internal:11434/v1}
       LOCAL_AI_MODEL: ${LOCAL_AI_MODEL:-qwen2.5vl}
       CORS_ORIGINS: http://localhost:3000
