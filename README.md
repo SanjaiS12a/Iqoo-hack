@@ -1,5 +1,7 @@
 # ClassMind — AI Teaching Co-Pilot
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/SanjaiS12a/Iqoo-hack)
+
 ClassMind is a complete school demo covering Grade 1 through Grade 12. A control database manages identities and assignments, twelve physically separate grade databases store academic work, and uploaded class portions drive questions, tutoring, analytics, and study plans.
 
 ## Working demo
